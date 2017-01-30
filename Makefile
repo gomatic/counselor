@@ -47,7 +47,8 @@ $(APP_NAME)-$(GOOS)-$(GOARCH): $(SOURCES)
 container: ## Create Docker image from Linux binary.
 	$(MAKE) linux GOOS=linux GOARCH=amd64
 	docker build \
-    --tag $(APP_NAME)/$(BRANCH):latest .
+    --tag $(APP_NAME):latest .
+	docker tag $(APP_NAME):latest $(APP_NAME)/$(BRANCH):latest
 	docker tag $(APP_NAME)/$(BRANCH):latest $(APP_NAME)/$(BRANCH):$(VERSION)
 
 up: DAEMON=
