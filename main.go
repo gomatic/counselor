@@ -254,16 +254,13 @@ func render(args []string, data metadataMap) []string {
 func makeEnv(prefix string, metadata metadataMap) []string {
 	out := make([]string, 0)
 	for n, v := range metadata {
+		safe := safe_re.ReplaceAllString(strings.ToUpper(n), "_")
 		switch s := v.(type) {
 		case string:
-			s = fmt.Sprintf(
-				"%s%s=%s",
-				prefix, safe_re.ReplaceAllString(strings.ToUpper(n), ""),
-				s,
-			)
+			s = fmt.Sprintf("%s%s=%s", prefix, safe, s)
 			out = append(out, s)
 		case metadataMap:
-			out = append(out, makeEnv(fmt.Sprintf("%s%s_", prefix, n), s)...)
+			out = append(out, makeEnv(fmt.Sprintf("%s%s_", prefix, safe), s)...)
 		}
 	}
 	return out
