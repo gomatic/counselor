@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/gomatic/counselor.svg?branch=master)](https://travis-ci.org/gomatic/counselor)
 
-Runs a comand after template-processing the parameters and environment with AWS
+Runs a command after template-processing the parameters and environment with AWS
 instance metadata provide as template variables.
 
     go get github.com/gomatic/counselor
@@ -35,56 +35,58 @@ Notice that `counselor` processes environment variables too:
 
     AZ={{.Placement.AvailabilityZone}} counselor run --silent -- counselor test -- {{.LocalIpv4}} | grep AZ
 
+Though that's redundant since `Placement.AvailabilityZone` is accessible in the environment as `AWS_METADATA_PLACEMENT_AVAILABILITYZONE`.
+So environment variable templates will likely be most useful to apply functions.
 
 # AWS Metadata
 
 The metadata is a map-tree of strings similar to this (YMMV):
 
-    AmiId:
-    AmiLaunchIndex:
-    AmiManifestPath:
+    AmiId:                       AWS_METADATA_AMIID
+    AmiLaunchIndex:              AWS_METADATA_AMILAUNCHINDEX
+    AmiManifestPath:             AWS_METADATA_AMIMANIFESTPATH
     BlockDeviceMapping:
-      Ami:
-      Root:
-    Hostname:
-    InstanceAction:
-    InstanceId:
-    InstanceType:
-    KernelId:
-    LocalHostname:
-    LocalIpv4:
-    Mac:
+      Ami:                       AWS_METADATA_BLOCKDEVICEMAPPING_AMI
+      Root:                      AWS_METADATA_BLOCKDEVICEMAPPING_ROOT
+    Hostname:                    AWS_METADATA_HOSTNAME
+    InstanceAction:              AWS_METADATA_INSTANCEACTION
+    InstanceId:                  AWS_METADATA_INSTANCEID
+    InstanceType:                AWS_METADATA_INSTANCETYPE
+    KernelId:                    AWS_METADATA_KERNELID
+    LocalHostname:               AWS_METADATA_LOCALHOSTNAME
+    LocalIpv4:                   AWS_METADATA_LOCALIPV4
+    Mac:                         AWS_METADATA_MAC
     Metrics:
-      Vhostmd:
+      Vhostmd:                   AWS_METADATA_METRICS_VHOSTMD
     Network:
       Interfaces:
         Macs:
           XX:XX:XX:XX:XX:XX:
-            DeviceNumber:
-            InterfaceId:
+            DeviceNumber:        AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_DEVICENUMBER
+            InterfaceId:         AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_INTERFACEID
             Ipv4Associations:
-              XX.XX.XX.XX:
-            LocalHostname:
-            LocalIpv4s:
-            Mac:
-            OwnerId:
-            PublicHostname:
-            PublicIpv4s:
-            SecurityGroupIds:
-            SecurityGroups:
-            SubnetId:
-            SubnetIpv4CidrBlock:
-            VpcId:
-            VpcIpv4CidrBlock:
-            VpcIpv4CidrBlocks:
+              XX.XX.XX.XX:       AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_IPV4ASSOCIATIONS_XX_XX_XX_XX
+            LocalHostname:       AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_LOCALHOSTNAME
+            LocalIpv4s:          AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_LOCALIPV4S
+            Mac:                 AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_MAC
+            OwnerId:             AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_OWNERID
+            PublicHostname:      AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_PUBLICHOSTNAME
+            PublicIpv4s:         AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_PUBLICIPV4S
+            SecurityGroupIds:    AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_SECURITYGROUPIDS
+            SecurityGroups:      AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_SECURITYGROUPS
+            SubnetId:            AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_SUBNETID
+            SubnetIpv4CidrBlock: AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_SUBNETIPV4CIDRBLOCK
+            VpcId:               AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_VPCID
+            VpcIpv4CidrBlock:    AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_VPCIPV4CIDRBLOCK
+            VpcIpv4CidrBlocks:   AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_VPCIPV4CIDRBLOCKS
     Placement:
-      AvailabilityZone:
-    Profile:
-    PublicHostname:
-    PublicIpv4:
+      AvailabilityZone:          AWS_METADATA_PLACEMENT_AVAILABILITYZONE
+    Profile:                     AWS_METADATA_PROFILE
+    PublicHostname:              AWS_METADATA_PUBLICHOSTNAME
+    PublicIpv4:                  AWS_METADATA_PUBLICIPV4
     PublicKeys:
-    ReservationId:
-    SecurityGroups:
+    ReservationId:               AWS_METADATA_RESERVATIONID
+    SecurityGroups:              AWS_METADATA_SECURITYGROUPS
     Services:
-      Domain:
-      Partition:
+      Domain:                    AWS_METADATA_SERVICES_DOMAIN
+      Partition:                 AWS_METADATA_SERVICES_PARTITION

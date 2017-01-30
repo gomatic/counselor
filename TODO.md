@@ -1,2 +1,4 @@
 - templating
   - [ ] provide "<no value>" alternative
+- functions
+  - [ ] ip address handling
