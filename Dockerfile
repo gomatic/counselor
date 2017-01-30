@@ -1,5 +1,7 @@
 FROM scratch
 
+MAINTAINER nicerobot "https://github.com/gomatic/counselor"
+
 ENV TMP=/
 ENV TEMP=/
 
@@ -10,5 +12,5 @@ ENV PWD=/
 ENV PATH=/
 COPY counselor-linux-amd64 /counselor
 
-ENTRYPOINT ["counselor", "run", "-V", "--"]
+ENTRYPOINT ["counselor", "run", "--verbose", "--"]
 CMD ["counselor", "test"]
