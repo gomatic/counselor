@@ -192,7 +192,7 @@ func run(ctx *cli.Context) error {
 	}
 	var env sort.StringSlice
 	env = append(env, os.Environ()...)
-	env = append(env, makeEnv(data)...)
+	env = append(env, makeEnv(settings.AWS.Prefix, data)...)
 	env.Sort()
 
 	env = render(env, data)
@@ -251,19 +251,19 @@ func render(args []string, data metadataMap) []string {
 }
 
 //
-func makeEnv(metadata metadataMap) []string {
+func makeEnv(prefix string, metadata metadataMap) []string {
 	out := make([]string, 0)
 	for n, v := range metadata {
 		switch s := v.(type) {
 		case string:
 			s = fmt.Sprintf(
 				"%s%s=%s",
-				settings.AWS.Prefix, safe_re.ReplaceAllString(strings.ToUpper(n), ""),
+				prefix, safe_re.ReplaceAllString(strings.ToUpper(n), ""),
 				s,
 			)
 			out = append(out, s)
 		case metadataMap:
-			out = append(out, makeEnv(s)...)
+			out = append(out, makeEnv(fmt.Sprintf("%s%s_", prefix, n), s)...)
 		}
 	}
 	return out
