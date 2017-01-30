@@ -84,30 +84,36 @@ func main() {
 				},
 				cli.IntFlag{
 					Name:        "metadata-timeout",
+					Usage:       "Seconds to wait for GET response.",
 					Value:       5,
 					EnvVar:      "METADATA_TIMEOUT",
 					Destination: &settings.AWS.Timeout,
 				},
 				cli.StringFlag{
 					Name:        "prefix",
+					Usage:       "The environment variable prefix for metadata keys.",
 					Value:       "AWS_METADATA_",
 					Destination: &settings.AWS.Prefix,
 				},
 				cli.StringFlag{
 					Name:        "separator",
-					Value:       ",",
+					Usage:       "The string that replaces carriage returns in metadata values.",
+					Value:       " ",
 					Destination: &settings.List.Separator,
 				},
 				cli.BoolFlag{
 					Name:        "silent, S",
+					Usage:       "Disable all output, including errors.",
 					Destination: &settings.Output.Silent,
 				},
 				cli.BoolFlag{
 					Name:        "verbose, V",
+					Usage:       "Report on the settings, metadata, and the environment.",
 					Destination: &settings.Output.Verbose,
 				},
 				cli.BoolFlag{
 					Name:        "debug, debugging, D",
+					Usage:       "Extensive output.",
 					Destination: &settings.Output.Debugging,
 				},
 			},
