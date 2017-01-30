@@ -1,5 +1,7 @@
 # counselor
 
+[![Build Status](https://travis-ci.org/gomatic/counselor.svg?branch=master)](https://travis-ci.org/gomatic/counselor)
+
 Runs a comand after template-processing the parameters and environment with AWS
 instance metadata provide as template variables.
 
