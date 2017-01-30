@@ -38,6 +38,7 @@ type application struct {
 
 	Output struct {
 		Verbose, Debugging, Silent bool
+		Mock bool
 	}
 }
 
@@ -116,6 +117,11 @@ func main() {
 					Usage:       "Extensive output.",
 					Destination: &settings.Output.Debugging,
 				},
+				cli.BoolFlag{
+					Name:        "mock, M",
+					Usage:       "Mock output.",
+					Destination: &settings.Output.Mock,
+				},
 			},
 			Before: func(ctx *cli.Context) error {
 				if settings.Output.Silent {
@@ -169,10 +175,18 @@ func test(ctx *cli.Context) error {
 
 //
 func run(ctx *cli.Context) error {
-	baseUrl := fmt.Sprintf("http://%s/%s", settings.AWS.Host, settings.AWS.Path)
-	data, err := listed(baseUrl)
-	if err != nil {
-		return err
+	var data metadataMap
+	if settings.Output.Mock {
+		data = metadataMap{
+			"COUNSELOR_MOCK":"true",
+		}
+	} else {
+		baseUrl := fmt.Sprintf("http://%s/%s", settings.AWS.Host, settings.AWS.Path)
+		d, err := listed(baseUrl)
+		if err != nil {
+			return err
+		}
+		data = d
 	}
 	if settings.Output.Verbose {
 		log.Printf("metadata:\n%s", data)
@@ -184,13 +198,19 @@ func run(ctx *cli.Context) error {
 		log.Printf("raw command: %+v", args)
 	}
 
-	args = render(args, data)
+	final := render(args, data)
 
-	binary, err := exec.LookPath(args[0])
+	binary, err := exec.LookPath(final[0])
 	if err != nil {
 		return err
 	}
-	var env sort.StringSlice
+
+	var env = sort.StringSlice{
+		fmt.Sprintf("COUNSELOR_STARTED=%d", time.Now().UTC().Unix()),
+		fmt.Sprintf("COUNSELOR_CMD_PRE=%s", strings.Join(args, " ")),
+		fmt.Sprintf("COUNSELOR_CMD=%s", strings.Join(final, " ")),
+	}
+
 	env = append(env, os.Environ()...)
 	env = append(env, makeEnv(settings.AWS.Prefix, data)...)
 	env.Sort()
@@ -204,9 +224,9 @@ func run(ctx *cli.Context) error {
 		}
 	}
 	if !settings.Output.Silent {
-		log.Printf("executing: %+v", args)
+		log.Printf("executing: %+v", final)
 	}
-	return syscall.Exec(binary, args, env)
+	return syscall.Exec(binary, final, env)
 }
 
 //

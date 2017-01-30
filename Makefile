@@ -23,6 +23,8 @@ export STARTD := $(shell pwd)
 export THIS := $(abspath $(lastword $(MAKEFILE_LIST)))
 export THISD := $(dir $(THIS))
 
+PACKAGE := main.VERSION=$(VERSION)
+
 build: $(APP_NAME) ## Make everything
 
 $(APP_NAME) $(GOBIN)/$(APP_NAME): $(SOURCES)
@@ -42,7 +44,7 @@ darwin: GOARCH := amd64
 darwin: gateway-$(GOOS)-$(GOARCH) ## Compile Darwin binary
 
 $(APP_NAME)-$(GOOS)-$(GOARCH): $(SOURCES)
-	CGO_ENABLED=0 go build -ldflags="-s -w -X main.VERSION=$(VERSION)" -a -installsuffix cgo -o $@
+	CGO_ENABLED=0 go build -ldflags="-s -w -X $(PACKAGE)" -a -installsuffix cgo -o $@
 
 container: ## Create Docker image from Linux binary.
 	$(MAKE) linux GOOS=linux GOARCH=amd64
