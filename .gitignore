@@ -6,5 +6,4 @@
 !Makefile
 !*.md
 !*.go
-!*.yaml
-
+!*.yml
