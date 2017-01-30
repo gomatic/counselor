@@ -5,6 +5,7 @@
 Runs a comand after template-processing the parameters and environment with AWS
 instance metadata provide as template variables.
 
+    go get github.com/gomatic/counselor
 
 ## What it does
 
@@ -14,14 +15,76 @@ instance metadata provide as template variables.
 
 ## e.g.
 
+On an AWS instance
+
+    go get github.com/gomatic/counselor
+
 Test using `/bin/echo`:
 
-    counselor run -- /bin/echo {{.LocalIp4}}
+    counselor run --silent -- /bin/echo {{.LocalIpv4}}
 
-- `counselor run` grabs all the metadata
+Show verbose output:
+
+    counselor run --verbose -- /bin/echo {{.LocalIpv4}}
 
 Test using the provided debugger:
 
-    counselor run -- counselor test -- {{.LocalIp4}}
+    counselor run --silent -- counselor test -- {{.LocalIpv4}}
 
-- `counselor test` just prints out its parameters and environment
+Notice that `counselor` processes environment variables too:
+
+    AZ={{.Placement.AvailabilityZone}} counselor run --silent -- counselor test -- {{.LocalIpv4}} | grep AZ
+
+
+# AWS Metadata
+
+The metadata is a map-tree of strings similar to this (YMMV):
+
+    AmiId:
+    AmiLaunchIndex:
+    AmiManifestPath:
+    BlockDeviceMapping:
+      Ami:
+      Root:
+    Hostname:
+    InstanceAction:
+    InstanceId:
+    InstanceType:
+    KernelId:
+    LocalHostname:
+    LocalIpv4:
+    Mac:
+    Metrics:
+      Vhostmd:
+    Network:
+      Interfaces:
+        Macs:
+          XX:XX:XX:XX:XX:XX:
+            DeviceNumber:
+            InterfaceId:
+            Ipv4Associations:
+              XX.XX.XX.XX:
+            LocalHostname:
+            LocalIpv4s:
+            Mac:
+            OwnerId:
+            PublicHostname:
+            PublicIpv4s:
+            SecurityGroupIds:
+            SecurityGroups:
+            SubnetId:
+            SubnetIpv4CidrBlock:
+            VpcId:
+            VpcIpv4CidrBlock:
+            VpcIpv4CidrBlocks:
+    Placement:
+      AvailabilityZone:
+    Profile:
+    PublicHostname:
+    PublicIpv4:
+    PublicKeys:
+    ReservationId:
+    SecurityGroups:
+    Services:
+      Domain:
+      Partition:
