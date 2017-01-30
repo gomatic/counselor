@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"text/template"
+	"time"
 
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
@@ -31,6 +32,7 @@ type application struct {
 	}
 
 	AWS struct {
+		Timeout            int
 		Host, Path, Prefix string
 	}
 
@@ -79,6 +81,12 @@ func main() {
 					Value:       "latest/meta-data/",
 					EnvVar:      "METADATA_PATH",
 					Destination: &settings.AWS.Path,
+				},
+				cli.IntFlag{
+					Name:        "metadata-timeout",
+					Value:       5,
+					EnvVar:      "METADATA_TIMEOUT",
+					Destination: &settings.AWS.Timeout,
 				},
 				cli.StringFlag{
 					Name:        "prefix",
@@ -310,8 +318,10 @@ func metadata(url string, list []string) (metadataMap, error) {
 
 //
 func get(url string) ([]byte, error) {
-	client := &http.Client{}
-
+	timeout := time.Duration(time.Duration(settings.AWS.Timeout) * time.Second)
+	client := http.Client{
+		Timeout: timeout,
+	}
 	if settings.Output.Debugging {
 		log.Printf("GET %s", url)
 	}

@@ -2,7 +2,9 @@
 
 !.gitignore
 !LICENSE
-!Makfile
+!Dockerfile
+!Makefile
 !*.md
 !*.go
+!*.yaml
 
