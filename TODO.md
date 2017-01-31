@@ -1,6 +1,0 @@
-- templating
-  - [ ] provide "<no value>" alternative
-- functions
-  - [ ] ip address handling
-- [x] add counselor environment variables
-- [x] mock-mode for testing outside of AWS

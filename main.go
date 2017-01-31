@@ -36,9 +36,11 @@ type application struct {
 		Host, Path, Prefix string
 	}
 
+	MissingKey string
+
 	Output struct {
 		Verbose, Debugging, Silent bool
-		Mock bool
+		Mock                       bool
 	}
 }
 
@@ -102,6 +104,12 @@ func main() {
 					Value:       " ",
 					Destination: &settings.List.Separator,
 				},
+				cli.StringFlag{
+					Name:        "missing",
+					Usage:       "The value used when referencing a nonexistant template key.",
+					Value:       "error",
+					Destination: &settings.MissingKey,
+				},
 				cli.BoolFlag{
 					Name:        "silent, S",
 					Usage:       "Disable all output, including errors.",
@@ -141,6 +149,14 @@ func main() {
 				if len(args) == 0 {
 					return errors.New("No command provided.")
 				}
+
+				switch settings.MissingKey {
+				case "zero", "error", "default", "invalid":
+				default:
+					fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
+					settings.MissingKey = "default"
+				}
+				settings.MissingKey = fmt.Sprintf("missingkey=%s", settings.MissingKey)
 
 				return nil
 			},
@@ -207,8 +223,7 @@ func run(ctx *cli.Context) error {
 
 	var env = sort.StringSlice{
 		fmt.Sprintf("COUNSELOR_STARTED=%d", time.Now().UTC().Unix()),
-		fmt.Sprintf("COUNSELOR_CMD_PRE=%s", strings.Join(args, " ")),
-		fmt.Sprintf("COUNSELOR_CMD=%s", strings.Join(final, " ")),
+		fmt.Sprintf("COUNSELOR_VERSION=%s.%s", MAJOR, VERSION),
 	}
 
 	env = append(env, os.Environ()...)
@@ -250,7 +265,10 @@ func render(args []string, data metadataMap) []string {
 		if !strings.Contains(arg, "{{") {
 			continue
 		}
-		tmpl, err := template.New(arg).Parse(arg)
+		tmpl, err := template.New(arg).
+			Option(settings.MissingKey).
+			Funcs(funcs).
+			Parse(arg)
 		if err != nil {
 			if settings.Output.Debugging {
 				log.Print(err)

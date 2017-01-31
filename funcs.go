@@ -1,0 +1,311 @@
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"text/template"
+	"time"
+)
+
+//
+var funcs = template.FuncMap{
+	"debug":                              debug,
+	"ip_math":                            ip_math,
+	"ip4_next":                           ip4_next,
+	"ip4_prev":                           ip4_prev,
+	"ip4_add":                            ip4_add,
+	"ip4_join":                           ip4_join,
+	"ip6_next":                           ip6_next,
+	"ip6_prev":                           ip6_prev,
+	"ip6_add":                            ip6_add,
+	"ip6_join":                           ip6_join,
+	"cidr_next":                          cidr_next,
+	"ip_ints":                            ip_ints,
+	"ip_split":                           ip_split,
+	"to_int":                             to_int,
+	"dec_to_int":                         dec_to_int,
+	"hex_to_int":                         hex_to_int,
+	"from_int":                           from_int,
+	"inc":                                func(a int) int { return a + 1 },
+	"add":                                add,
+	"sub":                                sub,
+	"mul":                                mul,
+	"div":                                div,
+	"mod":                                mod,
+	"rand":                               func() int64 { return rand.Int63() },
+	"cleanse":                            cleanse(`[^[:alpha:]]`),
+	"environment":                        environment(),
+	"now":                                time.Now,
+	"split":                              split,
+	"join":                               join,
+	"lower":                              strings.ToLower,
+	"replace":                            strings.Replace,
+	"trim":                               strings.Trim,
+	"trimLeft":                           strings.TrimLeft,
+	"trimRight":                          strings.TrimRight,
+	"upper":                              strings.ToUpper,
+}
+
+//
+func debug(any ...interface{}) string {
+	s := make([]string, len(any))
+	for i, a := range any {
+		s[i] = fmt.Sprintf("%v", a)
+	}
+	return join(" ", s)
+}
+
+func add(a, b int64) int64 { return a + b }
+func sub(a, b int64) int64 { return a - b }
+func mul(a, b int64) int64 { return a * b }
+func mod(a, b int64) int64 { return a % b }
+
+//
+func div(a, b int64) int64 {
+	if b == 0 {
+		return a
+	}
+	return a / b
+}
+
+//
+func cleanse(r string) func(string) string {
+	re := regexp.MustCompile(r)
+	return func(s string) string {
+		return re.ReplaceAllString(s, "")
+	}
+}
+
+func parseInt(base int) func(s string) (int64, error) {
+	return func(s string) (int64, error) {
+		return strconv.ParseInt(s, base, 64)
+	}
+}
+
+//
+func environment() func(string) string {
+	env := make(map[string]string)
+	for _, item := range os.Environ() {
+		splits := strings.Split(item, "=")
+		env[splits[0]] = splits[1]
+	}
+	return func(n string) string {
+		v, exists := env[n]
+		if !exists {
+			return n
+		}
+		return v
+	}
+}
+
+var (
+	parseDec = parseInt(10)
+	parseHex = parseInt(16)
+)
+
+// TODO increment CIDR
+func cidr_next(cidr uint8, lowest, count, inc int8, addr []int64) []int64 {
+	return addr
+}
+
+func ipi(bits int16, lowest, count, inc, value int64) int64 {
+	if value < lowest {
+		value += int64(bits)
+	}
+	return (lowest + (value-lowest+inc)%count) % int64(bits)
+}
+
+//
+func ip4_next(group uint8, lowest, count uint8, addr string) string {
+	return ip4_join(ip4_add(group, lowest, count, 1, ip_ints(addr)))
+}
+
+//
+func ip4_prev(group uint8, lowest, count uint8, addr string) string {
+	return ip4_join(ip4_add(group, lowest, count, -1, ip_ints(addr)))
+}
+
+// Given a zero-based, left-to-right IP group index, lowest value, count, and increment,
+// increment the group, cyclically.
+func ip4_add(group uint8, lowest, count uint8, inc int8, addr []int64) []int64 {
+	if group >= uint8(len(addr)) {
+		return addr
+	}
+	addr[group] = ipi(256, int64(lowest), int64(count), int64(inc), addr[group])
+	return addr
+}
+
+//
+func ip6_next(group uint8, lowest, count uint16, addr string) string {
+	return ip6_join(ip6_add(group, lowest, count, 1, ip_ints(addr)))
+}
+
+//
+func ip6_prev(group uint8, lowest, count uint16, addr string) string {
+	return ip6_join(ip6_add(group, lowest, count, -1, ip_ints(addr)))
+}
+
+// given a group, lowest, count, and increment, increment the group, circling around
+func ip6_add(group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
+	if group >= uint8(len(addr)) {
+		return addr
+	}
+	addr[group] = ipi(256, int64(lowest), int64(count), int64(inc), addr[group])
+	return addr
+}
+
+//
+func join(sep string, arr []string) (s string) {
+	return strings.Join(arr, sep)
+}
+
+//
+func split(sep, s string) []string {
+	return strings.Split(s, sep)
+}
+
+//
+func ip_split(addr string) []string {
+	ip_groups := split(".", addr)
+	if len(ip_groups) > 1 {
+		return ip_groups
+	}
+	return split(":", addr)
+}
+
+//
+func ip4_join(addr []int64) string {
+	return join(".", from_int("%d", addr))
+}
+
+//
+func ip6_join(addr []int64) string {
+	return join(":", from_int("%04x", addr))
+}
+
+//
+func ip_ints(addr string) []int64 {
+	if ip_groups := split(".", addr); len(ip_groups) > 1 {
+		return dec_to_int(ip_groups)
+	} else {
+		return hex_to_int(strings.Split(":", addr))
+	}
+}
+
+//
+func dec_to_int(arr []string) []int64 {
+	return to_int(10, arr)
+}
+
+//
+func hex_to_int(arr []string) []int64 {
+	return to_int(16, arr)
+}
+
+//
+func to_int(base int, arr []string) []int64 {
+	is := make([]int64, len(arr))
+	parser := parseInt(base)
+	for i, m := range arr {
+		p, err := parser(m)
+		if err != nil {
+			continue
+		}
+		is[i] = p
+	}
+	return is
+}
+
+//
+func from_int(format string, arr []int64) []string {
+	ss := make([]string, len(arr))
+	for i, m := range arr {
+		ss[i] = fmt.Sprintf(format, m)
+	}
+	return ss
+}
+
+// Performs IP math using a simple sequence of operations.
+// e.g. _.[+2]._.[+1,%10]
+func ip_math(math, addr string) string {
+	sep, format, width := ".", "%d", uint(256)
+	ip_groups := split(sep, addr)
+	th_groups := split(sep, math)
+	parser := parseDec
+	if len(ip_groups) == 1 {
+		parser = parseHex
+		sep, format, width = ":", "%04x", uint(65536)
+		ip_groups = split(sep, addr)
+		th_groups = split(sep, math)
+	}
+	if len(ip_groups) != len(th_groups) {
+		return addr
+	}
+	ip_values := make([]int64, len(ip_groups))
+	for i, m := range ip_groups {
+		p, err := parser(m)
+		if err != nil {
+			continue
+		}
+		ip_values[i] = p
+	}
+	for i, m := range th_groups {
+		m := m
+		lm := len(m)
+		if lm < 3 {
+			continue
+		}
+		switch m {
+		case "_":
+			continue
+		}
+		if m[0] != '[' || m[lm - 1] != ']' {
+			continue
+		}
+		m = m[1:lm - 1]
+		p := ip_values[i]
+		for _, a := range strings.Split(m, ",") {
+			a := a
+			op := a[0]
+			switch op {
+			case '+', '-', '*', '/', '%':
+				a = a[1:]
+			default:
+			}
+
+			n := int64(0)
+			switch a {
+			case "R":
+				n = rand.Int63n(int64(width))
+			default:
+				x, err := parser(a)
+				if err != nil {
+					continue
+				}
+				n = x
+			}
+
+			switch op {
+			case '+':
+				p += n
+			case '-':
+				p -= n
+			case '*':
+				p *= n
+			case '/':
+				p /= n
+			case '%':
+				p %= n
+			default:
+				p = n
+			}
+			p %= int64(width)
+		}
+		ip_groups[i] = fmt.Sprintf(format, uint(p)%width)
+	}
+	return join(sep, ip_groups)
+}
