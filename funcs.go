@@ -32,7 +32,7 @@ var funcs = template.FuncMap{
 	"dec_to_int":                         dec_to_int,
 	"hex_to_int":                         hex_to_int,
 	"from_int":                           from_int,
-	"inc":                                func(a int) int { return a + 1 },
+	"inc":                                func(a int64) int64 { return a + 1 },
 	"add":                                add,
 	"sub":                                sub,
 	"mul":                                mul,
@@ -40,8 +40,9 @@ var funcs = template.FuncMap{
 	"mod":                                mod,
 	"rand":                               func() int64 { return rand.Int63() },
 	"cleanse":                            cleanse(`[^[:alpha:]]`),
-	"environment":                        environment(),
+	"environment":                        environment,
 	"now":                                time.Now,
+	"index":                              index,
 	"split":                              split,
 	"join":                               join,
 	"lower":                              strings.ToLower,
@@ -61,17 +62,21 @@ func debug(any ...interface{}) string {
 	return join(" ", s)
 }
 
-func add(a, b int64) int64 { return a + b }
-func sub(a, b int64) int64 { return a - b }
-func mul(a, b int64) int64 { return a * b }
-func mod(a, b int64) int64 { return a % b }
+func add(a, b int64) int64 { return b + a }
 
-//
+// Subtract `a` from `b`
+func sub(a, b int64) int64 { return b - a }
+func mul(a, b int64) int64 { return b * a }
+
+// `b` modulo `a`
+func mod(a, b int64) int64 { return b % a }
+
+// `b` divided by `a`. Returns `0` if `a == 0`.
 func div(a, b int64) int64 {
-	if b == 0 {
-		return a
+	if a == 0 {
+		return 0
 	}
-	return a / b
+	return b / a
 }
 
 //
@@ -89,19 +94,9 @@ func parseInt(base int) func(s string) (int64, error) {
 }
 
 //
-func environment() func(string) string {
-	env := make(map[string]string)
-	for _, item := range os.Environ() {
-		splits := strings.Split(item, "=")
-		env[splits[0]] = splits[1]
-	}
-	return func(n string) string {
-		v, exists := env[n]
-		if !exists {
-			return n
-		}
-		return v
-	}
+func environment(n string) string {
+	v, _ := os.LookupEnv(n)
+	return v
 }
 
 var (
@@ -184,6 +179,14 @@ func join(sep string, arr []string) (s string) {
 //
 func split(sep, s string) []string {
 	return strings.Split(s, sep)
+}
+
+//
+func index(i int, a []int64) int64 {
+	if a == nil || i < 0 || i >= len(a) {
+		return -1
+	}
+	return a[i]
 }
 
 //

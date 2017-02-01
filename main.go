@@ -204,6 +204,15 @@ func run(ctx *cli.Context) error {
 		}
 		data = d
 	}
+	{
+		env := make(map[string]string)
+		for _, item := range os.Environ() {
+			splits := strings.Split(item, "=")
+			env[splits[0]] = join("=", splits[1:])
+		}
+		data["env"] = env
+	}
+
 	if settings.Output.Verbose {
 		log.Printf("metadata:\n%s", data)
 	}
