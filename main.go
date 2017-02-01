@@ -17,6 +17,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/gomatic/funcmap"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 )
@@ -246,7 +247,7 @@ func run(ctx *cli.Context) error {
 		v := make(map[string]string)
 		for _, item := range env {
 			splits := strings.Split(item, "=")
-			v[splits[0]] = join("=", splits[1:])
+			v[splits[0]] = strings.Join(splits[1:], "=")
 		}
 		data["env"] = v
 	}
@@ -299,7 +300,7 @@ func render(args []string, data metadataMap) []string {
 		}
 		tmpl, err := template.New(arg).
 			Option(settings.MissingKey).
-			Funcs(funcs).
+			Funcs(funcmap.Map).
 			Parse(arg)
 		if err != nil {
 			if settings.Output.Debugging {
