@@ -12,5 +12,5 @@ ENV PWD=/
 ENV PATH=/
 COPY counselor-linux-amd64 /counselor
 
-ENTRYPOINT ["counselor", "run", "--verbose", "--"]
+ENTRYPOINT ["counselor", "run", "--debug", "--verbose", "--"]
 CMD ["counselor", "test"]

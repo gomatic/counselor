@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -126,9 +127,10 @@ func main() {
 					Destination: &settings.Output.Debugging,
 				},
 				cli.BoolFlag{
-					Name:        "mock, M",
-					Usage:       "Mock output.",
-					Destination: &settings.Output.Mock,
+					Name:         "mock, M",
+					Usage:        "Mock output.",
+					EnvVar:       "COUNSELOR_MOCK",
+					Destination:  &settings.Output.Mock,
 				},
 			},
 			Before: func(ctx *cli.Context) error {
@@ -194,7 +196,7 @@ func run(ctx *cli.Context) error {
 	var data metadataMap
 	if settings.Output.Mock {
 		data = metadataMap{
-			"COUNSELOR_MOCK":"true",
+			"CounselorMock":"true",
 		}
 	} else {
 		baseUrl := fmt.Sprintf("http://%s/%s", settings.AWS.Host, settings.AWS.Path)
@@ -204,17 +206,55 @@ func run(ctx *cli.Context) error {
 		}
 		data = d
 	}
-	{
-		env := make(map[string]string)
-		for _, item := range os.Environ() {
-			splits := strings.Split(item, "=")
-			env[splits[0]] = join("=", splits[1:])
-		}
-		data["env"] = env
+
+	// Prefix the data prior to adding anything else.
+	prefixed := makeEnv(settings.AWS.Prefix, data)
+
+	var env = sort.StringSlice{
+		fmt.Sprintf("COUNSELOR_STARTED=%d", time.Now().UTC().Unix()),
+		fmt.Sprintf("COUNSELOR_VERSION=%s.%s", MAJOR, VERSION),
 	}
 
+	// Check for containerization
+
+	func() {
+		// cat /proc/self/cgroup | awk -F'/' '{print $3}'
+		f, err := os.Open("/proc/self/cgroup")
+		if err != nil {
+			return
+		}
+		defer f.Close()
+		r := bufio.NewReader(f)
+		first, err := r.ReadString('\n')
+		if err != nil {
+			return
+		}
+		if parts := strings.Split(strings.TrimSpace(first), "/"); len(parts) < 3 || parts[1] != "docker" {
+			if settings.Output.Verbose {
+				log.Printf("Not a properly formatted /proc/self/cgroup file: %+v", parts)
+			}
+		} else {
+			env = append(env, fmt.Sprintf("COUNSELOR_CONTAINERID=%s", parts[2]))
+		}
+	}()
+
+	env = append(env, os.Environ()...)
+	env = append(env, prefixed...)
+	env.Sort()
+
+	{
+		v := make(map[string]string)
+		for _, item := range env {
+			splits := strings.Split(item, "=")
+			v[splits[0]] = join("=", splits[1:])
+		}
+		data["env"] = v
+	}
+
+	env = render(env, data)
+
 	if settings.Output.Verbose {
-		log.Printf("metadata:\n%s", data)
+		log.Printf("variables:\n%s", data)
 	}
 
 	args := ctx.Args()
@@ -230,23 +270,6 @@ func run(ctx *cli.Context) error {
 		return err
 	}
 
-	var env = sort.StringSlice{
-		fmt.Sprintf("COUNSELOR_STARTED=%d", time.Now().UTC().Unix()),
-		fmt.Sprintf("COUNSELOR_VERSION=%s.%s", MAJOR, VERSION),
-	}
-
-	env = append(env, os.Environ()...)
-	env = append(env, makeEnv(settings.AWS.Prefix, data)...)
-	env.Sort()
-
-	env = render(env, data)
-	if settings.Output.Verbose {
-		if buf, err := yaml.Marshal(env); err != nil {
-			log.Printf("environment: %s", env)
-		} else {
-			log.Printf("environment:\n%s", buf)
-		}
-	}
 	if !settings.Output.Silent {
 		log.Printf("executing: %+v", final)
 	}
