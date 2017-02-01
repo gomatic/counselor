@@ -15,10 +15,12 @@ import (
 var funcs = template.FuncMap{
 	"debug":                              debug,
 	"ip_math":                            ip_math,
+	"ip4_inc":                            ip4_inc,
 	"ip4_next":                           ip4_next,
 	"ip4_prev":                           ip4_prev,
 	"ip4_add":                            ip4_add,
 	"ip4_join":                           ip4_join,
+	"ip6_inc":                            ip6_inc,
 	"ip6_next":                           ip6_next,
 	"ip6_prev":                           ip6_prev,
 	"ip6_add":                            ip6_add,
@@ -112,11 +114,30 @@ func cidr_next(cidr uint8, lowest, count, inc int8, addr []int64) []int64 {
 	return addr
 }
 
-func ipi(bits int16, lowest, count, inc, value int64) int64 {
+func ip_calc(bits int32, lowest, count, inc, value int64) int64 {
 	if value < lowest {
 		value += int64(bits)
 	}
 	return (lowest + (value-lowest+inc)%count) % int64(bits)
+}
+
+// Given a zero-based, left-to-right IP group index, lowest value, count, and increment,
+// increment the group, cyclically.
+func ip_add(bits int32, group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
+	if group >= uint8(len(addr)) {
+		return addr
+	}
+	if lowest == 0 && count == 0 {
+		addr[group] = (addr[group] + int64(inc)) % int64(bits)
+	} else {
+		addr[group] = ip_calc(int32(bits), int64(lowest), int64(count), int64(inc), addr[group])
+	}
+	return addr
+}
+
+//
+func ip4_inc(group uint8, inc int8, addr string) string {
+	return ip4_join(ip4_add(group, 0, 0, inc, ip_ints(addr)))
 }
 
 //
@@ -132,11 +153,12 @@ func ip4_prev(group uint8, lowest, count uint8, addr string) string {
 // Given a zero-based, left-to-right IP group index, lowest value, count, and increment,
 // increment the group, cyclically.
 func ip4_add(group uint8, lowest, count uint8, inc int8, addr []int64) []int64 {
-	if group >= uint8(len(addr)) {
-		return addr
-	}
-	addr[group] = ipi(256, int64(lowest), int64(count), int64(inc), addr[group])
-	return addr
+	return ip_add(int32(256), group, uint16(lowest), uint16(count), int16(inc), addr)
+}
+
+//
+func ip6_inc(group uint8, inc int16, addr string) string {
+	return ip6_join(ip6_add(group, 0, 0, inc, ip_ints(addr)))
 }
 
 //
@@ -151,11 +173,7 @@ func ip6_prev(group uint8, lowest, count uint16, addr string) string {
 
 // given a group, lowest, count, and increment, increment the group, circling around
 func ip6_add(group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
-	if group >= uint8(len(addr)) {
-		return addr
-	}
-	addr[group] = ipi(256, int64(lowest), int64(count), int64(inc), addr[group])
-	return addr
+	return ip_add(int32(65536), group, lowest, count, inc, addr)
 }
 
 //
