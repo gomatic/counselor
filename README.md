@@ -38,19 +38,19 @@ Notice that `counselor` processes environment variables too:
 Though that's redundant since `Placement.AvailabilityZone` is accessible in the environment as `AWS_METADATA_PLACEMENT_AVAILABILITYZONE`.
 So environment variable templates will likely be most useful to apply functions.
 
-And there is simple IP math. The following will increment the IP's 3rd group (zero-based, left-to-right) between `10 <= X < 110`.
+And there is simple IP math. The following will increment the IP's 3rd group (zero-based, left-to-right) between `10 <= X < 15`.
 This might be useful to, for example, auto-configure a cluster to communicate with other well-know host IPs but for which
 it's not ideal to store the IP in the command-line.
 
     counselor run --silent -- counselor test -- {{.LocalIpv4 | ip4_next 3 10 5}}
 
-Imagine your cluster is `192.168.1.11` through `192.168.1.15`. With the above template, each node can be configured to
+Imagine your cluster is `192.168.1.10` through `192.168.1.14`. With the above template, each node can be configured to
 communicate with the next node in the cluster, as a ring.
 
-So `ip4_next 3 10 5` means:
-- take IP group `3`, e.g. given `192.168.1.15`, group `3` is `15`
+So `{{"192.168.1.14" | ip4_next 3 10 5}}` means:
+- take IP group `3` which is `14`
 - with the lowest value for group `3` being `10`,
-- compute the next IP for a `5` node cluster. `192.168.1.11`
+- compute the next IP for a `5` node cluster which is `192.168.1.10` (wraps the ring).
 
 _Disclaimer: This might convoluted but one of the goals is to be able to compute IP addresses without adding any quoting
 in the template._
