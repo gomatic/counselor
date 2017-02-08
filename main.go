@@ -77,7 +77,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:        "metadata-host",
-					Value:       "169.254.169.254",
+					Value:       "instance-data",
 					EnvVar:      "METADATA_HOST",
 					Destination: &settings.AWS.Host,
 				},
