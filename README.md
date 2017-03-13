@@ -9,7 +9,7 @@ instance metadata provide as template variables.
 
 ## What it does
 
-1. obtains the metadata from `169.254.169.254/latest/meta-data/`.
+1. obtains the metadata from `instance-data/latest/meta-data/`.
 1. renders template `{{.variables}}` in command-line parameters and environment variables.
 1. `exec` the provided command.
 
