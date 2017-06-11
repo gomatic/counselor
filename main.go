@@ -18,14 +18,10 @@ import (
 	"time"
 
 	"github.com/gomatic/funcmap"
+	"github.com/gomatic/go-vbuild"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 )
-
-//
-const MAJOR = "1.0"
-
-var VERSION = "1"
 
 //
 type application struct {
@@ -48,11 +44,11 @@ type application struct {
 
 //
 func (config application) String() string {
-	if buf, err := yaml.Marshal(config); err != nil {
+	buf, err := yaml.Marshal(config)
+	if err != nil {
 		return fmt.Sprintf("%#v", config)
-	} else {
-		return string(buf)
 	}
+	return string(buf)
 }
 
 //
@@ -60,11 +56,12 @@ var settings application
 
 //
 func main() {
+
 	app := cli.NewApp()
 	app.Name = "counselor"
 	app.Usage = "Runs a command within AWS and exposes all the AWS metadata to the command."
 	app.ArgsUsage = "-- command parameters..."
-	app.Version = MAJOR + "." + VERSION
+	app.Version = build.Version.Update(1, 0).String()
 	app.EnableBashCompletion = true
 
 	app.Commands = []cli.Command{
@@ -128,10 +125,10 @@ func main() {
 					Destination: &settings.Output.Debugging,
 				},
 				cli.BoolFlag{
-					Name:         "mock, M",
-					Usage:        "Mock output.",
-					EnvVar:       "COUNSELOR_MOCK",
-					Destination:  &settings.Output.Mock,
+					Name:        "mock, M",
+					Usage:       "Mock output.",
+					EnvVar:      "COUNSELOR_MOCK",
+					Destination: &settings.Output.Mock,
 				},
 			},
 			Before: func(ctx *cli.Context) error {
@@ -197,7 +194,7 @@ func run(ctx *cli.Context) error {
 	var data metadataMap
 	if settings.Output.Mock {
 		data = metadataMap{
-			"CounselorMock":"true",
+			"CounselorMock": "true",
 		}
 	} else {
 		baseUrl := fmt.Sprintf("http://%s/%s", settings.AWS.Host, settings.AWS.Path)
@@ -213,7 +210,7 @@ func run(ctx *cli.Context) error {
 
 	var env = sort.StringSlice{
 		fmt.Sprintf("COUNSELOR_STARTED=%d", time.Now().UTC().Unix()),
-		fmt.Sprintf("COUNSELOR_VERSION=%s.%s", MAJOR, VERSION),
+		fmt.Sprintf("COUNSELOR_VERSION=%s", ctx.App.Version),
 	}
 
 	// Check for containerization
@@ -282,15 +279,15 @@ type metadataMap map[string]interface{}
 
 //
 func (md metadataMap) String() string {
-	if buf, err := yaml.Marshal(md); err != nil {
+	buf, err := yaml.Marshal(md)
+	if err != nil {
 		return fmt.Sprintf("%#v", md)
-	} else {
-		return string(buf)
 	}
+	return string(buf)
 }
 
 //
-var safe_re = regexp.MustCompile(`[^A-Z0-9_]`)
+var safeRE = regexp.MustCompile(`[^A-Z0-9_]`)
 
 //
 func render(args []string, data metadataMap) []string {
@@ -325,7 +322,7 @@ func render(args []string, data metadataMap) []string {
 func makeEnv(prefix string, metadata metadataMap) []string {
 	out := make([]string, 0)
 	for n, v := range metadata {
-		safe := safe_re.ReplaceAllString(strings.ToUpper(n), "_")
+		safe := safeRE.ReplaceAllString(strings.ToUpper(n), "_")
 		switch s := v.(type) {
 		case string:
 			s = fmt.Sprintf("%s%s=%s", prefix, safe, s)
@@ -383,7 +380,7 @@ func metadata(url string, list []string) (metadataMap, error) {
 				}
 				continue
 			}
-			data[c[:len(c) - 1]] = meta
+			data[c[:len(c)-1]] = meta
 		}
 	}
 
