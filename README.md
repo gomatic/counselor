@@ -13,7 +13,7 @@ instance metadata provide as template variables.
 1. renders template `{{.variables}}` in command-line parameters and environment variables.
 1. `exec` the provided command.
 
-## e.g.
+## Examples
 
 On an AWS instance
 
@@ -31,12 +31,16 @@ Test using the provided debugger:
 
     counselor run --silent -- counselor test -- {{.LocalIpv4}}
 
+### Advanced Examples
+
 Notice that `counselor` processes environment variables too:
 
     AZ={{.Placement.AvailabilityZone}} counselor run --silent -- counselor test -- {{.LocalIpv4}} | grep AZ
 
 Though that's redundant since `Placement.AvailabilityZone` is accessible in the environment as `AWS_METADATA_PLACEMENT_AVAILABILITYZONE`.
 So environment variable templates will likely be most useful to apply functions.
+
+#### Using Functions
 
 And there is simple IP math. The following will increment the IP's 3rd group (zero-based, left-to-right) between `10 <= X < 15`.
 This might be useful to, for example, auto-configure a cluster to communicate with other well-know host IPs but for which
@@ -52,12 +56,13 @@ So `{{"192.168.1.14" | ip4_next 3 10 5}}` means:
 - with the lowest value for group `3` being `10`,
 - compute the next IP for a `5` node cluster which is `192.168.1.10` (wraps the ring).
 
-_Disclaimer: This might convoluted but one of the goals is to be able to compute IP addresses without adding any quoting
-in the template._
+_Disclaimer: These functions might seem convoluted but one of the goals is to be able to compute IP addresses without adding any quoting
+in the template. Quoting templates within a command line that itself requires quoting can be confusing and complex._
 
-# AWS Metadata
+# AWS Metadata Environment Variables Syntax
 
-The metadata is a map-tree of strings similar to this (YMMV):
+The metadata environment variables are generated based on the hierarchy of the variables, similar to the following (YMMV).
+Counselor iterates the instance data at the time of execution so if instance data is added in the future, counselor will reflect it automatically.
 
     AmiId:                       AWS_METADATA_AMIID
     AmiLaunchIndex:              AWS_METADATA_AMILAUNCHINDEX
