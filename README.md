@@ -37,9 +37,9 @@ To help identify what template variables are available (variables are case-sensi
 
 There is a test mode:
 
-    counselor test
+    counselor test -- {{.LocalIpv4}} {{.Placement.AvailabilityZone}}
 
-Running by itself like that doesn't print any of the `AWS_*` environment. All the tester does is dump it's arguments and the environment variables defined for its process.
+Running by itself like that doesn't show any of the `AWS_*` environment and its arguments remain the literals passed. All the tester does is dump it's arguments and the environment variables defined for its process.
 
 But we can use that tester to see what `counselor run` is actually doing. Compare the above test with this test:
 
@@ -58,7 +58,7 @@ That command is:
 1. Adding `MYDATA="{{.LocalIpv4}},{{.Placement.AvailabilityZone}}"` to `counselor run`'s environment.
 1. `counselor run` template processes the environment.
 1. `counselor run` runs `counselor test` which dumps its environment.
-1. `grep` filters just the `MYDATA` value that `counselor test` sees.
+1. `grep` filters just the `MYDATA` value that `counselor test` sees as a string that contains the local IPv4 and AZ.
 
 #### Using Functions
 
