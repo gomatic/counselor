@@ -2,7 +2,6 @@
 
 [![reportcard](https://goreportcard.com/badge/github.com/gomatic/counselor)](https://goreportcard.com/report/github.com/gomatic/counselor)
 [![build](https://travis-ci.org/gomatic/counselor.svg?branch=master)](https://travis-ci.org/gomatic/counselor)
-[![godoc](https://godoc.org/github.com/gomatic/counselor/extension?status.svg)](https://godoc.org/github.com/gomatic/counselor/extension)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
 Runs a command after template-processing the parameters and environment using AWS
