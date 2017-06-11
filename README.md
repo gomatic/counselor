@@ -21,7 +21,7 @@ If your instance has Go installed:
 
     go get github.com/gomatic/counselor
 
-Otherwise, grab the release:
+Otherwise, grab the [latest release](https://github.com/gomatic/counselor/releases/latest):
 
     curl -L https://github.com/gomatic/counselor/releases/download/1.0/counselor_1.0.0_linux_amd64.tgz | tar zx
 
