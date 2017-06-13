@@ -105,7 +105,7 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:        "missing",
-					Usage:       "The value used when referencing a nonexistant template key.",
+					Usage:       "The value used when referencing a nonexistant template key from: zero, error, default, invalid",
 					Value:       "error",
 					Destination: &settings.MissingKey,
 				},

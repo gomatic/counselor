@@ -31,7 +31,7 @@ Otherwise, grab the [latest release](https://github.com/gomatic/counselor/releas
 
 On an AWS instance:
 
-Test using `/bin/echo` to print the instance's public IPv4 address and AZ:
+Test using `/bin/echo` to print the instance's public IPv4 address (if it exists) and AZ:
 
     counselor run --silent -- /bin/echo {{.PublicIpv4}} {{.Placement.AvailabilityZone}}
 
@@ -53,7 +53,7 @@ But we can use that tester to see what `counselor run` is actually doing. Compar
 
     counselor run --silent -- counselor test -- {{.PublicIpv4}} {{.Placement.AvailabilityZone}}
 
-You'll see (scrolling back through the output) that it has added lots of `AWS_*` variables to the environment and it has template processed the command-line arguments. That is, the `counselor test` that `counselor run` executes, actually only sees the local IPv4 address and AZ on the command line, not the template variables.
+You'll see (scrolling back through the output) that it has added lots of `AWS_*` variables to the environment and it has template processed the command-line arguments. That is, the `counselor test` that `counselor run` executes, actually only sees the public IPv4 address and AZ on the command line, not the template variables.
 
 ### Advanced Examples
 
@@ -66,7 +66,7 @@ That command is:
 1. Adding `MYDATA="{{.PublicIpv4}},{{.Placement.AvailabilityZone}}"` to `counselor run`'s environment.
 1. `counselor run` template processes the environment.
 1. `counselor run` runs `counselor test` which dumps its environment.
-1. `grep` filters just the `MYDATA` value that `counselor test` sees as a string that contains the local IPv4 and AZ.
+1. `grep` filters just the `MYDATA` value that `counselor test` sees as a string that contains the public IPv4 and AZ.
 
 #### Using Functions
 
@@ -108,7 +108,7 @@ Counselor iterates the instance data at the time of execution so if instance dat
     InstanceType:                AWS_METADATA_INSTANCETYPE
     KernelId:                    AWS_METADATA_KERNELID
     LocalHostname:               AWS_METADATA_LOCALHOSTNAME
-    PublicIpv4:                   AWS_METADATA_LOCALIPV4
+    PublicIpv4:                  AWS_METADATA_LOCALIPV4
     Mac:                         AWS_METADATA_MAC
     Metrics:
       Vhostmd:                   AWS_METADATA_METRICS_VHOSTMD
@@ -121,7 +121,7 @@ Counselor iterates the instance data at the time of execution so if instance dat
             Ipv4Associations:
               XX.XX.XX.XX:       AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_IPV4ASSOCIATIONS_XX_XX_XX_XX
             LocalHostname:       AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_LOCALHOSTNAME
-            PublicIpv4s:          AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_LOCALIPV4S
+            PublicIpv4s:         AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_LOCALIPV4S
             Mac:                 AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_MAC
             OwnerId:             AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_OWNERID
             PublicHostname:      AWS_METADATA_NETWORK_INTERFACES_MACS_XX_XX_XX_XX_XX_XX_PUBLICHOSTNAME
